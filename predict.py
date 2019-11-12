@@ -30,7 +30,7 @@ def prepare_sequences(notes, pitchnames, n_vocab):
     # map between notes and integers and back
     note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
 
-    sequence_length = 100
+    sequence_length = 200
     network_input = []
     output = []
     for i in range(0, len(notes) - sequence_length, 1):
@@ -51,17 +51,23 @@ def prepare_sequences(notes, pitchnames, n_vocab):
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
-    model.add(LSTM(256,input_shape=(network_input.shape[1], network_input.shape[2]),return_sequences=True))
+    model.add(LSTM(
+        256,
+        input_shape=(network_input.shape[1], network_input.shape[2]),
+        return_sequences=True
+    ))
+    model.add(Dropout(0.3))
+    model.add(LSTM(256, return_sequences=True))
     model.add(Dropout(0.3))
     model.add(LSTM(256))
     model.add(Dense(128))
-    model.add(Dropout(0.4))
+    model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     # Load the weights to each node
-    model.load_weights('output/cmajor/weights-improvement-30-0.4637-bigger.hdf5')
+    model.load_weights('output/cmajor_sequence200_60-80/weights-improvement-20-0.1933-bigger.hdf5')
 
     return model
 
@@ -76,7 +82,7 @@ def generate_notes(model, network_input, pitchnames, n_vocab):
     prediction_output = []
 
     # generate 500 notes
-    for note_index in range(200):
+    for note_index in range(500):
         prediction_input = numpy.reshape(pattern, (1, len(pattern), 1))
         prediction_input = prediction_input / float(n_vocab)
 
@@ -124,7 +130,7 @@ def create_midi(prediction_output):
 
     midi_stream = stream.Stream(output_notes)
 
-    midi_stream.write('midi', fp='test_output.mid')
+    midi_stream.write('midi', fp='output.mid')
 
 if __name__ == '__main__':
     generate()

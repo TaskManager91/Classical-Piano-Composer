@@ -10,6 +10,7 @@ from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM
 from keras.layers import Activation
+from keras.layers import Bidirectional
 from keras.utils import np_utils
 from keras.callbacks import ModelCheckpoint
 
@@ -22,6 +23,7 @@ def train_network():
 
     # get amount of pitch names
     n_vocab = len(set(notes))
+    print(n_vocab)
 
     network_input, network_output = prepare_sequences(notes, n_vocab)
 
@@ -71,7 +73,7 @@ def get_notes(args):
 
 def prepare_sequences(notes, n_vocab):
     """ Prepare the sequences used by the Neural Network """
-    sequence_length = 128
+    sequence_length = 200
 
     # get all pitch names
     pitchnames = sorted(set(item for item in notes))
@@ -103,17 +105,24 @@ def prepare_sequences(notes, n_vocab):
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
-    model.add(LSTM(256,input_shape=(network_input.shape[1], network_input.shape[2]),return_sequences=True))
+    model.add(LSTM(
+        256,
+        input_shape=(network_input.shape[1], network_input.shape[2]),
+        return_sequences=True
+    ))
+    model.add(Dropout(0.3))
+    model.add(LSTM(256, return_sequences=True))
     model.add(Dropout(0.3))
     model.add(LSTM(256))
     model.add(Dense(128))
-    model.add(Dropout(0.4))
+    model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
-    # use this line to import "old weights"
-    model.load_weights('output/cmajor_TwoLayer/weights-improvement-50-1.3308-bigger.hdf5')
+
+    # this line is to import "old weights"
+    # model.load_weights('output/cmajor_TwoLayer/weights-improvement-50-1.3308-bigger.hdf5')
 
     return model
 

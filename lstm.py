@@ -71,7 +71,7 @@ def get_notes(args):
 
 def prepare_sequences(notes, n_vocab):
     """ Prepare the sequences used by the Neural Network """
-    sequence_length = 50
+    sequence_length = 200
 
     # get all pitch names
     pitchnames = sorted(set(item for item in notes))
@@ -119,7 +119,7 @@ def create_network(network_input, n_vocab):
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     # use this line to import "old weights"
-    # model.load_weights('output/cmajor/weights-improvement-50-0.3425-bigger.hdf5')
+    model.load_weights('output/cmajor-20-60/weights-improvement-50-0.3425-bigger.hdf5')
 
     return model
 

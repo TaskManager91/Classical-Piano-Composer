@@ -2,7 +2,7 @@
     trained neural network """
 import pickle
 import numpy
-from music21 import instrument, note, stream, chord
+from music21 import instrument, note, stream, chord, duration
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
@@ -30,7 +30,7 @@ def prepare_sequences(notes, pitchnames, n_vocab):
     # map between notes and integers and back
     note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
 
-    sequence_length = 100
+    sequence_length = 200
     network_input = []
     output = []
     for i in range(0, len(notes) - sequence_length, 1):
@@ -67,7 +67,7 @@ def create_network(network_input, n_vocab):
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     # Load the weights to each node
-    model.load_weights('output/cmajor/weights-improvement-50-0.3425-bigger.hdf5')
+    model.load_weights('output/cmajor/weights-improvement-20-0.1933-bigger.hdf5')
 
     return model
 

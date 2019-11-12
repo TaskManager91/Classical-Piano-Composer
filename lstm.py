@@ -3,6 +3,7 @@
 import glob
 import pickle
 import numpy
+import argparse
 from music21 import converter, instrument, note, chord
 from keras.models import Sequential
 from keras.layers import Dense
@@ -14,7 +15,10 @@ from keras.callbacks import ModelCheckpoint
 
 def train_network():
     """ Train a Neural Network to generate music """
-    notes = get_notes()
+    args = parse_args()
+    args.verbose = True
+
+    notes = get_notes(args)
 
     # get amount of pitch names
     n_vocab = len(set(notes))
@@ -23,13 +27,25 @@ def train_network():
 
     model = create_network(network_input, n_vocab)
 
-    train(model, network_input, network_output)
+    model.summary()
 
-def get_notes():
+    train(model, network_input, network_output, args)
+def parse_args():
+
+    parser = argparse.ArgumentParser(
+                        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--dir', type=str, default='chopin',
+                        help='data directory containing .mid files to use for' \
+                             'training')
+    parser.add_argument('--epochs', type=int, default=20,
+                        help='number of epochs before stopping training.')                         
+
+    return parser.parse_args()
+def get_notes(args):
     """ Get all the notes and chords from the midi files in the ./midi_songs directory """
     notes = []
 
-    for file in glob.glob("midi_songs/*.mid"):
+    for file in glob.glob('midi/'+args.dir+'/*.mid'):
         midi = converter.parse(file)
 
         print("Parsing %s" % file)
@@ -55,7 +71,7 @@ def get_notes():
 
 def prepare_sequences(notes, n_vocab):
     """ Prepare the sequences used by the Neural Network """
-    sequence_length = 100
+    sequence_length = 50
 
     # get all pitch names
     pitchnames = sorted(set(item for item in notes))
@@ -88,15 +104,15 @@ def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
     model.add(LSTM(
-        512,
+        256,
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
     ))
     model.add(Dropout(0.3))
-    model.add(LSTM(512, return_sequences=True))
+    model.add(LSTM(256, return_sequences=True))
     model.add(Dropout(0.3))
-    model.add(LSTM(512))
-    model.add(Dense(256))
+    model.add(LSTM(256))
+    model.add(Dense(128))
     model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
@@ -104,9 +120,9 @@ def create_network(network_input, n_vocab):
 
     return model
 
-def train(model, network_input, network_output):
+def train(model, network_input, network_output, args):
     """ train the neural network """
-    filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
+    filepath = "output/"+args.dir+"/weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
         monitor='loss',
@@ -116,7 +132,7 @@ def train(model, network_input, network_output):
     )
     callbacks_list = [checkpoint]
 
-    model.fit(network_input, network_output, epochs=200, batch_size=64, callbacks=callbacks_list)
+    model.fit(network_input, network_output, epochs=args.epochs, batch_size=128, callbacks=callbacks_list)
 
 if __name__ == '__main__':
     train_network()

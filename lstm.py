@@ -3,7 +3,7 @@
 import glob
 import pickle
 import numpy
-import argparse
+import argparse, os
 from music21 import converter, instrument, note, chord
 from keras.models import Sequential
 from keras.layers import Dense
@@ -118,10 +118,16 @@ def create_network(network_input, n_vocab):
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
+    # use this line to import "old weights"
+    # model.load_weights('output/cmajor/weights-improvement-50-0.3425-bigger.hdf5')
+
     return model
 
 def train(model, network_input, network_output, args):
     """ train the neural network """
+    if not os.path.exists("output/"+args.dir):
+        os.makedirs("output/"+args.dir)
+
     filepath = "output/"+args.dir+"/weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
     checkpoint = ModelCheckpoint(
         filepath,
